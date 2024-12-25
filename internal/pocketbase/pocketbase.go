@@ -8,21 +8,16 @@ import (
 	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
+	"pocketbase-ts-generator/internal/credentials"
 )
 
-type PocketBaseCredentials struct {
-	Host     string
-	Email    string
-	Password string
-	token    string
-}
-
 type PocketBase struct {
-	credentials *PocketBaseCredentials
+	credentials *credentials.Credentials
+	token       string
 	client      *http.Client
 }
 
-func New(Credentials *PocketBaseCredentials) *PocketBase {
+func New(Credentials *credentials.Credentials) *PocketBase {
 	pocketBase := &PocketBase{
 		credentials: Credentials,
 		client:      &http.Client{},
@@ -81,16 +76,18 @@ func (pocketBase *PocketBase) Authenticate() error {
 		return errors.New("token is missing")
 	}
 
+	log.Debug().Msgf("Got token %s", authResponse.Token)
+
 	log.Info().Msgf("Authentication successful")
 
-	pocketBase.credentials.token = authResponse.Token
+	pocketBase.token = authResponse.Token
 
 	return nil
 }
 
 func (pocketBase *PocketBase) DoWithAuth(request *http.Request) (*http.Response, error) {
-	if pocketBase.credentials.token != "" {
-		request.Header.Set("Authorization", pocketBase.credentials.token)
+	if pocketBase.token != "" {
+		request.Header.Set("Authorization", pocketBase.token)
 	}
 
 	return pocketBase.client.Do(request)
