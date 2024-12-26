@@ -1,0 +1,35 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+
+    - name: Build
+      run: go build -v ./cmd/pocketbase-ts-generator/main.go
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref_name, 'v')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+      run: |
+        gh release create "$tag" \
+          --repo="$GITHUB_REPOSITORY" \
+          --title="${tag#v}" \
+          --generate-notes
