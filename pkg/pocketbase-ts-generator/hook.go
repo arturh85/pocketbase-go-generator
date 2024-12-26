@@ -2,7 +2,7 @@ package pocketbase_ts_generator
 
 import (
 	"github.com/pocketbase/pocketbase"
-	pb_core "github.com/pocketbase/pocketbase/core"
+	pbcore "github.com/pocketbase/pocketbase/core"
 	"pocketbase-ts-generator/internal/cmd"
 )
 
@@ -23,19 +23,19 @@ func RegisterHook(app *pocketbase.PocketBase, options *GeneratorOptions) {
 		Output: options.Output,
 	}
 
-	app.OnCollectionAfterCreateSuccess().BindFunc(func(e *pb_core.CollectionEvent) error {
+	app.OnCollectionAfterCreateSuccess().BindFunc(func(e *pbcore.CollectionEvent) error {
 		_ = processFileGeneration(app, generatorFlags)
 
 		return e.Next()
 	})
 
-	app.OnCollectionAfterUpdateSuccess().BindFunc(func(e *pb_core.CollectionEvent) error {
+	app.OnCollectionAfterUpdateSuccess().BindFunc(func(e *pbcore.CollectionEvent) error {
 		_ = processFileGeneration(app, generatorFlags)
 
 		return e.Next()
 	})
 
-	app.OnCollectionAfterDeleteSuccess().BindFunc(func(e *pb_core.CollectionEvent) error {
+	app.OnCollectionAfterDeleteSuccess().BindFunc(func(e *pbcore.CollectionEvent) error {
 		_ = processFileGeneration(app, generatorFlags)
 
 		return e.Next()
