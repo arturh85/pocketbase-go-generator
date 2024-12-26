@@ -2,12 +2,15 @@ version: 2
 
 project_name: pocketbase-ts-generator
 
+dist: .builds
+
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - main: ./cmd/pocketbase-ts-generator
+  - id: build_noncgo
+    main: ./cmd/pocketbase-ts-generator
     binary: pocketbase-ts-generator
     ldflags:
       - -s -w -X github.com/Vogeslu/pocketbase-ts-generator.Version={{ .Version }}
@@ -39,6 +42,9 @@ builds:
       - goos: darwin
         goarch: ppc64le
 
+release:
+  draft: true
+
 archives:
   - id: archive_noncgo
     builds: [build_noncgo]
@@ -50,14 +56,11 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 
+snapshot:
+  version_template: '{{ incpatch .Version }}-next'
+
 changelog:
   sort: asc
   filters:
     exclude:
-      - "^example:"
-
-snapshot:
-  version_template: '{{ incpatch .Version }}-next'
-
-release:
-  draft: true
+      - '^example:'
