@@ -1,12 +1,12 @@
 package pocketbase_ts_generator
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/core"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/forms"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_core"
 	"github.com/pocketbase/pocketbase"
-	"pocketbase-ts-generator/internal/cmd"
-	"pocketbase-ts-generator/internal/core"
-	"pocketbase-ts-generator/internal/forms"
-	"pocketbase-ts-generator/internal/pocketbase_api"
-	"pocketbase-ts-generator/internal/pocketbase_core"
 )
 
 func processFileGeneration(app *pocketbase.PocketBase, generatorFlags *cmd.GeneratorFlags) error {

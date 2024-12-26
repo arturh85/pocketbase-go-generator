@@ -1,9 +1,9 @@
 package pocketbase_ts_generator
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
 	"github.com/pocketbase/pocketbase"
 	pbcore "github.com/pocketbase/pocketbase/core"
-	"pocketbase-ts-generator/internal/cmd"
 )
 
 type GeneratorOptions struct {

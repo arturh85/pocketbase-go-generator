@@ -2,9 +2,9 @@ package forms
 
 import (
 	"errors"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/credentials"
 	"github.com/charmbracelet/huh"
 	"github.com/rs/zerolog/log"
-	"pocketbase-ts-generator/internal/credentials"
 )
 
 func AskCredentials(pbCredentials *credentials.Credentials) bool {

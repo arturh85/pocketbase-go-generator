@@ -1,15 +1,15 @@
 package main
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/core"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/credentials"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/forms"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os"
-	"pocketbase-ts-generator/internal/cmd"
-	"pocketbase-ts-generator/internal/core"
-	"pocketbase-ts-generator/internal/credentials"
-	"pocketbase-ts-generator/internal/forms"
-	"pocketbase-ts-generator/internal/pocketbase_api"
 )
 
 func main() {

@@ -1,10 +1,10 @@
 package forms
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
 	"github.com/charmbracelet/huh"
 	"github.com/rs/zerolog/log"
-	"pocketbase-ts-generator/internal/cmd"
-	"pocketbase-ts-generator/internal/pocketbase_api"
 	"sort"
 	"strings"
 )

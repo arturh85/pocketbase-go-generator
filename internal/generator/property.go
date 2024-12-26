@@ -2,8 +2,8 @@ package generator
 
 import (
 	"fmt"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
 	"github.com/iancoleman/strcase"
-	"pocketbase-ts-generator/internal/pocketbase_api"
 	"strings"
 )
 

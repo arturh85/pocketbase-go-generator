@@ -2,10 +2,10 @@ package core
 
 import (
 	"fmt"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/interpreter"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
 	"github.com/rs/zerolog/log"
 	"os"
-	"pocketbase-ts-generator/internal/interpreter"
-	"pocketbase-ts-generator/internal/pocketbase_api"
 	"strings"
 )
 

@@ -1,10 +1,10 @@
 package pocketbase_ts_generator
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
 	"github.com/pocketbase/pocketbase"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"pocketbase-ts-generator/internal/cmd"
 )
 
 func RegisterCommand(app *pocketbase.PocketBase) {

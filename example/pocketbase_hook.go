@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/pkg/pocketbase-ts-generator"
 	"github.com/pocketbase/pocketbase"
 	"github.com/rs/zerolog/log"
-	"pocketbase-ts-generator/pkg/pocketbase-ts-generator"
 )
 
 func main() {

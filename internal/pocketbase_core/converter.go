@@ -1,8 +1,8 @@
 package pocketbase_core
 
 import (
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
 	"github.com/pocketbase/pocketbase/core"
-	"pocketbase-ts-generator/internal/pocketbase_api"
 )
 
 func convertPBCollections(pbCollections []*core.Collection) []pocketbase_api.Collection {
