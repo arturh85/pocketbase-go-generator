@@ -37,7 +37,7 @@ func GetGenerateTsCommand(fromPocketBase bool, callback func(cmd *cobra.Command,
 		rootCmd.PersistentFlags().BoolVarP(&generatorFlags.DisableForm, "disable-form", "d", false, "Disable form")
 		rootCmd.PersistentFlags().BoolVarP(&generatorFlags.DisableLogs, "disable-logs", "l", false, "Disable logs, only return result if no output is specified or errors")
 
-		rootCmd.PersistentFlags().StringVarP(&generatorFlags.Host, "host url", "u", "", "Pocketbase host url (e. g. http://127.0.0.1:8090)")
+		rootCmd.PersistentFlags().StringVarP(&generatorFlags.Host, "host-url", "u", "", "Pocketbase host url (e. g. http://127.0.0.1:8090)")
 		rootCmd.PersistentFlags().StringVarP(&generatorFlags.Host, "email", "e", "", "Pocketbase email")
 		rootCmd.PersistentFlags().StringVarP(&generatorFlags.Host, "password", "p", "", "Pocketbase password")
 
