@@ -3,14 +3,14 @@ package forms
 import (
 	"github.com/charmbracelet/huh"
 	"github.com/rs/zerolog/log"
-	"pocketbase-ts-generator/internal/cli"
-	"pocketbase-ts-generator/internal/pocketbase"
+	"pocketbase-ts-generator/internal/cmd"
+	"pocketbase-ts-generator/internal/pocketbase_api"
 	"sort"
 	"strings"
 )
 
-func AskCollectionSelection(collections []pocketbase.Collection) []*pocketbase.Collection {
-	options := make([]huh.Option[*pocketbase.Collection], len(collections))
+func AskCollectionSelection(collections []pocketbase_api.Collection) []*pocketbase_api.Collection {
+	options := make([]huh.Option[*pocketbase_api.Collection], len(collections))
 
 	for i, collection := range collections {
 		options[i] = huh.NewOption(collection.String(), &collection).Selected(!collection.System)
@@ -20,11 +20,11 @@ func AskCollectionSelection(collections []pocketbase.Collection) []*pocketbase.C
 		return options[i].Value.System != options[j].Value.System
 	})
 
-	var output []*pocketbase.Collection
+	var output []*pocketbase_api.Collection
 
 	form := huh.NewForm(
 		huh.NewGroup(
-			huh.NewMultiSelect[*pocketbase.Collection]().
+			huh.NewMultiSelect[*pocketbase_api.Collection]().
 				Options(options...).
 				Title("Select collections to generate types from").
 				Value(&output),
@@ -39,8 +39,8 @@ func AskCollectionSelection(collections []pocketbase.Collection) []*pocketbase.C
 	return output
 }
 
-func GetSelectedCollections(generatorFlags *cli.GeneratorFlags, collections []pocketbase.Collection) []*pocketbase.Collection {
-	var output []*pocketbase.Collection
+func GetSelectedCollections(generatorFlags *cmd.GeneratorFlags, collections []pocketbase_api.Collection) []*pocketbase_api.Collection {
+	var output []*pocketbase_api.Collection
 
 	checkInclude := len(generatorFlags.CollectionsInclude) > 0
 

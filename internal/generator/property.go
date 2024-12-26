@@ -3,7 +3,7 @@ package generator
 import (
 	"fmt"
 	"github.com/iancoleman/strcase"
-	"pocketbase-ts-generator/internal/pocketbase"
+	"pocketbase-ts-generator/internal/pocketbase_api"
 	"strings"
 )
 
@@ -29,7 +29,7 @@ type InterfaceProperty struct {
 }
 
 type CollectionWithProperties struct {
-	Collection *pocketbase.Collection
+	Collection *pocketbase_api.Collection
 	Properties []*InterfaceProperty
 }
 

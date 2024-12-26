@@ -1,4 +1,4 @@
-package pocketbase
+package pocketbase_api
 
 import (
 	"encoding/json"

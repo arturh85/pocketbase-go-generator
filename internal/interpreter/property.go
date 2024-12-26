@@ -2,10 +2,10 @@ package interpreter
 
 import (
 	"pocketbase-ts-generator/internal/generator"
-	"pocketbase-ts-generator/internal/pocketbase"
+	"pocketbase-ts-generator/internal/pocketbase_api"
 )
 
-func InterpretCollections(collections []*pocketbase.Collection, allCollections []pocketbase.Collection) []*generator.CollectionWithProperties {
+func InterpretCollections(collections []*pocketbase_api.Collection, allCollections []pocketbase_api.Collection) []*generator.CollectionWithProperties {
 	output := make([]*generator.CollectionWithProperties, len(collections))
 
 	for i, collection := range collections {
@@ -15,7 +15,7 @@ func InterpretCollections(collections []*pocketbase.Collection, allCollections [
 	return output
 }
 
-func InterpretCollection(collection *pocketbase.Collection, allCollections []pocketbase.Collection) *generator.CollectionWithProperties {
+func InterpretCollection(collection *pocketbase_api.Collection, allCollections []pocketbase_api.Collection) *generator.CollectionWithProperties {
 	output := &generator.CollectionWithProperties{
 		Collection: collection,
 	}
@@ -31,7 +31,7 @@ func InterpretCollection(collection *pocketbase.Collection, allCollections []poc
 	return output
 }
 
-func InterpretProperty(field pocketbase.CollectionField, collection *pocketbase.Collection, allCollections []pocketbase.Collection) *generator.InterfaceProperty {
+func InterpretProperty(field pocketbase_api.CollectionField, collection *pocketbase_api.Collection, allCollections []pocketbase_api.Collection) *generator.InterfaceProperty {
 	output := &generator.InterfaceProperty{
 		Name:           field.Name,
 		CollectionName: collection.Name,
