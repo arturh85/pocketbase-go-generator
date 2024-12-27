@@ -16,11 +16,10 @@ func processFileGeneration(app *pocketbase.PocketBase, generatorFlags *cmd.Gener
 	}
 
 	var selectedCollections []*pocketbase_api.Collection
-	outputTarget := generatorFlags.Output
 
 	selectedCollections = forms.GetSelectedCollections(generatorFlags, collections.Items)
 
-	core.ProcessCollections(selectedCollections, collections.Items, outputTarget)
+	core.ProcessCollections(selectedCollections, collections.Items, generatorFlags)
 
 	return nil
 }
