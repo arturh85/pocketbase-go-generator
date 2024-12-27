@@ -58,6 +58,7 @@ If you don't want to use the built-in prompts, you can use flags to enter the re
 -c, --encryption-password string    credentials.enc.env password
 -h, --help                          help for generate-ts
 -u, --host-url string               Pocketbase host url (e. g. http://127.0.0.1:8090)
+    --non-required-optional         Make non required fields optional properties (with question mark)
 -o, --output string                 Output file path
 -p, --password string               Pocketbase password
 ```
@@ -125,6 +126,7 @@ The following options are available:
   -x, --collections-exclude strings   Collections to exclude
   -i, --collections-include strings   Collections to include (Overrides default selection or all collections)
   -h, --help                          help for generate-ts
+      --non-required-optional         Make non required fields optional properties (with question mark)
   -o, --output string                 Output file path
 ```
 
