@@ -19,6 +19,9 @@ type GeneratorFlags struct {
 	CollectionsExclude []string
 
 	Output string
+
+	// Extra flags
+	MakeNonRequiredOptional bool
 }
 
 func GetGenerateTsCommand(fromPocketBase bool, callback func(cmd *cobra.Command, args []string, generatorFlags *GeneratorFlags)) *cobra.Command {
@@ -49,6 +52,8 @@ func GetGenerateTsCommand(fromPocketBase bool, callback func(cmd *cobra.Command,
 	rootCmd.PersistentFlags().StringSliceVarP(&generatorFlags.CollectionsExclude, "collections-exclude", "x", []string{}, "Collections to exclude")
 
 	rootCmd.PersistentFlags().StringVarP(&generatorFlags.Output, "output", "o", "", "Output file path")
+
+	rootCmd.PersistentFlags().BoolVar(&generatorFlags.MakeNonRequiredOptional, "non-required-optional", false, "Make non required fields optional properties (with question mark)")
 
 	return rootCmd
 }

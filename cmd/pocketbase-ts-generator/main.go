@@ -69,16 +69,15 @@ func main() {
 		}
 
 		var selectedCollections []*pocketbase_api.Collection
-		outputTarget := generatorFlags.Output
 
 		if !generatorFlags.DisableForm {
 			selectedCollections = forms.AskCollectionSelection(collections.Items)
-			outputTarget = forms.AskOutputTarget(outputTarget)
+			generatorFlags.Output = forms.AskOutputTarget(generatorFlags.Output)
 		} else {
 			selectedCollections = forms.GetSelectedCollections(generatorFlags, collections.Items)
 		}
 
-		core.ProcessCollections(selectedCollections, collections.Items, outputTarget)
+		core.ProcessCollections(selectedCollections, collections.Items, generatorFlags)
 	})
 
 	err := rootCmd.Execute()

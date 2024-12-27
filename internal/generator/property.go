@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
 	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
 	"github.com/iancoleman/strcase"
 	"strings"
@@ -104,8 +105,8 @@ func (property InterfaceProperty) String() string {
 	return fmt.Sprintf("%s (%s)", property.Name, strings.Join(data, ", "))
 }
 
-func (property InterfaceProperty) GetTypescriptProperty() string {
-	return fmt.Sprintf("%s: %s", property.getTypescriptName(), property.getTypescriptTypeWithArray())
+func (property InterfaceProperty) GetTypescriptProperty(generatorFlags *cmd.GeneratorFlags) string {
+	return fmt.Sprintf("%s: %s", property.getTypescriptName(generatorFlags), property.getTypescriptTypeWithArray())
 }
 
 func (property InterfaceProperty) getTypescriptType() string {
@@ -148,20 +149,20 @@ func (property InterfaceProperty) getTypescriptTypeWithArray() string {
 	return tsType
 }
 
-func (property InterfaceProperty) getTypescriptName() string {
-	if property.Optional {
+func (property InterfaceProperty) getTypescriptName(generatorFlags *cmd.GeneratorFlags) string {
+	if property.Optional && generatorFlags.MakeNonRequiredOptional {
 		return fmt.Sprintf("%s?", property.Name)
 	}
 
 	return property.Name
 }
 
-func (collection CollectionWithProperties) GetTypescriptInterface() string {
+func (collection CollectionWithProperties) GetTypescriptInterface(generatorFlags *cmd.GeneratorFlags) string {
 	properties := make([]string, len(collection.Properties))
 	var additionalEnums []string
 
 	for i, property := range collection.Properties {
-		properties[i] = fmt.Sprintf("    %s;", property.GetTypescriptProperty())
+		properties[i] = fmt.Sprintf("    %s;", property.GetTypescriptProperty(generatorFlags))
 
 		if property.Type == IptEnum {
 			additionalEnums = append(additionalEnums, property.getTypescriptEnum())
