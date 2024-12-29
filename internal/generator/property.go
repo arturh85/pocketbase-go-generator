@@ -34,6 +34,11 @@ type CollectionWithProperties struct {
 	Properties []*InterfaceProperty
 }
 
+type propertyFlags struct {
+	relationAsString bool
+	forceOptional    bool
+}
+
 func GetInterfacePropertyType(typeName string) InterfacePropertyType {
 	switch typeName {
 	case "number":
@@ -105,11 +110,11 @@ func (property InterfaceProperty) String() string {
 	return fmt.Sprintf("%s (%s)", property.Name, strings.Join(data, ", "))
 }
 
-func (property InterfaceProperty) GetTypescriptProperty(generatorFlags *cmd.GeneratorFlags) string {
-	return fmt.Sprintf("%s: %s", property.getTypescriptName(generatorFlags), property.getTypescriptTypeWithArray())
+func (property InterfaceProperty) GetTypescriptProperty(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+	return fmt.Sprintf("%s: %s", property.getTypescriptName(generatorFlags, flags), property.getTypescriptTypeWithArray(flags))
 }
 
-func (property InterfaceProperty) getTypescriptType() string {
+func (property InterfaceProperty) getTypescriptType(flags propertyFlags) string {
 	switch property.Type {
 	case IptNumber:
 		return "number"
@@ -124,6 +129,10 @@ func (property InterfaceProperty) getTypescriptType() string {
 	case IptEnum:
 		return strcase.ToCamel(fmt.Sprintf("%s_%s_%s", property.CollectionName, property.Name, "options"))
 	case IptRelation:
+		if flags.relationAsString {
+			return "string"
+		}
+
 		relationTo, ok := property.Data.(string)
 		if !ok {
 			return "object"
@@ -135,8 +144,8 @@ func (property InterfaceProperty) getTypescriptType() string {
 	}
 }
 
-func (property InterfaceProperty) getTypescriptTypeWithArray() string {
-	tsType := property.getTypescriptType()
+func (property InterfaceProperty) getTypescriptTypeWithArray(flags propertyFlags) string {
+	tsType := property.getTypescriptType(flags)
 
 	if property.IsArray {
 		if property.Optional {
@@ -149,8 +158,8 @@ func (property InterfaceProperty) getTypescriptTypeWithArray() string {
 	return tsType
 }
 
-func (property InterfaceProperty) getTypescriptName(generatorFlags *cmd.GeneratorFlags) string {
-	if property.Optional && generatorFlags.MakeNonRequiredOptional {
+func (property InterfaceProperty) getTypescriptName(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+	if property.Optional && generatorFlags.MakeNonRequiredOptional || flags.forceOptional {
 		return fmt.Sprintf("%s?", property.Name)
 	}
 
@@ -159,17 +168,34 @@ func (property InterfaceProperty) getTypescriptName(generatorFlags *cmd.Generato
 
 func (collection CollectionWithProperties) GetTypescriptInterface(generatorFlags *cmd.GeneratorFlags) string {
 	properties := make([]string, len(collection.Properties))
-	var additionalEnums []string
+	var additionalTypes []string
+	var expandedRelations []string
 
 	for i, property := range collection.Properties {
-		properties[i] = fmt.Sprintf("    %s;", property.GetTypescriptProperty(generatorFlags))
+		properties[i] = fmt.Sprintf("    %s;", property.GetTypescriptProperty(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}))
 
 		if property.Type == IptEnum {
-			additionalEnums = append(additionalEnums, property.getTypescriptEnum())
+			additionalTypes = append(additionalTypes, property.getTypescriptEnum())
+		}
+
+		if property.Type == IptRelation {
+			expandedRelations = append(expandedRelations, fmt.Sprintf("    %s;", property.GetTypescriptProperty(generatorFlags, propertyFlags{forceOptional: true, relationAsString: false})))
 		}
 	}
 
-	prefix := strings.Join(additionalEnums, "\n\n")
+	if len(expandedRelations) > 0 {
+		expandedRelations = append(expandedRelations, "    [key: string]: unknown;")
+
+		expandedType := fmt.Sprintf("export interface %sExpanded {\n%s\n}", strcase.ToCamel(collection.Collection.Name), strings.Join(expandedRelations, "\n"))
+
+		additionalTypes = append(additionalTypes, expandedType)
+
+		expandedLine := fmt.Sprintf("    expand?: %sExpanded;", strcase.ToCamel(collection.Collection.Name))
+
+		properties = append([]string{expandedLine}, properties...)
+	}
+
+	prefix := strings.Join(additionalTypes, "\n\n")
 
 	if prefix != "" {
 		prefix += "\n\n"
