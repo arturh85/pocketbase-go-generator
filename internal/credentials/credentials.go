@@ -8,11 +8,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/scrypt"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+	"golang.org/x/crypto/scrypt"
 )
 
 var (

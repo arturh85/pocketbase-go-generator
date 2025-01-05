@@ -193,6 +193,10 @@ func (collection CollectionWithProperties) GetTypescriptInterface(generatorFlags
 		expandedLine := fmt.Sprintf("    expand?: %sExpanded;", strcase.ToCamel(collection.Collection.Name))
 
 		properties = append([]string{expandedLine}, properties...)
+	} else {
+		expandedLine := "    expand?: { [key: string]: unknown; };"
+
+		properties = append([]string{expandedLine}, properties...)
 	}
 
 	prefix := strings.Join(additionalTypes, "\n\n")
