@@ -2,12 +2,13 @@ package core
 
 import (
 	"fmt"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/interpreter"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
-	"github.com/rs/zerolog/log"
 	"os"
 	"strings"
+
+	"github.com/arturh85/pocketbase-go-generator/internal/cmd"
+	"github.com/arturh85/pocketbase-go-generator/internal/interpreter"
+	"github.com/arturh85/pocketbase-go-generator/internal/pocketbase_api"
+	"github.com/rs/zerolog/log"
 )
 
 func ProcessCollections(selectedCollections []*pocketbase_api.Collection, allCollections []pocketbase_api.Collection, generatorFlags *cmd.GeneratorFlags) {
@@ -16,7 +17,7 @@ func ProcessCollections(selectedCollections []*pocketbase_api.Collection, allCol
 	output := make([]string, len(interpretedCollections))
 
 	for i, collection := range interpretedCollections {
-		output[i] = collection.GetTypescriptInterface(generatorFlags)
+		output[i] = collection.GetGoInterface(generatorFlags)
 	}
 
 	joinedData := strings.Join(output, "\n\n")

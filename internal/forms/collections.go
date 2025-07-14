@@ -1,12 +1,13 @@
 package forms
 
 import (
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
-	"github.com/charmbracelet/huh"
-	"github.com/rs/zerolog/log"
 	"sort"
 	"strings"
+
+	"github.com/arturh85/pocketbase-go-generator/internal/cmd"
+	"github.com/arturh85/pocketbase-go-generator/internal/pocketbase_api"
+	"github.com/charmbracelet/huh"
+	"github.com/rs/zerolog/log"
 )
 
 func AskCollectionSelection(collections []pocketbase_api.Collection) []*pocketbase_api.Collection {

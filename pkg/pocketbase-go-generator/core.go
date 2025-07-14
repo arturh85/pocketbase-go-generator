@@ -1,11 +1,11 @@
-package pocketbase_ts_generator
+package pocketbase_go_generator
 
 import (
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/core"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/forms"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_core"
+	"github.com/arturh85/pocketbase-go-generator/internal/cmd"
+	"github.com/arturh85/pocketbase-go-generator/internal/core"
+	"github.com/arturh85/pocketbase-go-generator/internal/forms"
+	"github.com/arturh85/pocketbase-go-generator/internal/pocketbase_api"
+	"github.com/arturh85/pocketbase-go-generator/internal/pocketbase_core"
 	"github.com/pocketbase/pocketbase"
 )
 

@@ -24,13 +24,13 @@ type GeneratorFlags struct {
 	MakeNonRequiredOptional bool
 }
 
-func GetGenerateTsCommand(fromPocketBase bool, callback func(cmd *cobra.Command, args []string, generatorFlags *GeneratorFlags)) *cobra.Command {
+func GetGenerateGoCommand(fromPocketBase bool, callback func(cmd *cobra.Command, args []string, generatorFlags *GeneratorFlags)) *cobra.Command {
 	generatorFlags := &GeneratorFlags{}
 
 	rootCmd := &cobra.Command{
-		Use:   "generate-ts",
-		Short: "Generate typescript interfaces from pocketbase_api",
-		Long:  "Generate typescript interfaces based on pocketbase_api collection definitions",
+		Use:   "generate-go",
+		Short: "Generate go interfaces from pocketbase_api",
+		Long:  "Generate go interfaces based on pocketbase_api collection definitions",
 		Run: func(cmd *cobra.Command, args []string) {
 			callback(cmd, args, generatorFlags)
 		},

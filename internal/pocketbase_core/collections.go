@@ -1,7 +1,7 @@
 package pocketbase_core
 
 import (
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
+	"github.com/arturh85/pocketbase-go-generator/internal/pocketbase_api"
 	"github.com/pocketbase/pocketbase"
 )
 

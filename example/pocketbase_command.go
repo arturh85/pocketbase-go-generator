@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Vogeslu/pocketbase-ts-generator/pkg/pocketbase-ts-generator"
+	"github.com/arturh85/pocketbase-go-generator/pkg/pocketbase-go-generator"
 	"github.com/pocketbase/pocketbase"
 	"github.com/rs/zerolog/log"
 )
@@ -9,7 +9,7 @@ import (
 func main() {
 	app := pocketbase.New()
 
-	pocketbase_ts_generator.RegisterCommand(app)
+	pocketbase_go_generator.RegisterCommand(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal().Err(err)

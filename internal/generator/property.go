@@ -2,10 +2,12 @@ package generator
 
 import (
 	"fmt"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/cmd"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/pocketbase_api"
-	"github.com/iancoleman/strcase"
+	"strconv"
 	"strings"
+
+	"github.com/arturh85/pocketbase-go-generator/internal/cmd"
+	"github.com/arturh85/pocketbase-go-generator/internal/pocketbase_api"
+	"github.com/iancoleman/strcase"
 )
 
 type InterfacePropertyType int
@@ -110,21 +112,30 @@ func (property InterfaceProperty) String() string {
 	return fmt.Sprintf("%s (%s)", property.Name, strings.Join(data, ", "))
 }
 
-func (property InterfaceProperty) GetTypescriptProperty(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
-	return fmt.Sprintf("%s: %s", property.getTypescriptName(generatorFlags, flags), property.getTypescriptTypeWithArray(flags))
+func (property InterfaceProperty) GetGoProperty(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+	// IntValue int `json:"intValue"`
+	return fmt.Sprintf("%s %s `json:\"%s\"`", strcase.ToCamel(property.getGoName(generatorFlags, flags)), property.getGoTypeWithArray(flags), property.getGoName(generatorFlags, flags))
 }
 
-func (property InterfaceProperty) getTypescriptType(flags propertyFlags) string {
+func (property InterfaceProperty) getGoType(flags propertyFlags) string {
 	switch property.Type {
 	case IptNumber:
-		return "number"
+		if property.Optional {
+			return "*float32"
+		} else {
+			return "float32"
+		}
 	case IptBoolean:
-		return "boolean"
+		if property.Optional {
+			return "*bool"
+		} else {
+			return "bool"
+		}
 	case IptJson:
 		if property.Optional {
-			return "object | null | \"\""
+			return "*map[string]interface{}"
 		} else {
-			return "object"
+			return "map[string]interface{}"
 		}
 	case IptEnum:
 		return strcase.ToCamel(fmt.Sprintf("%s_%s_%s", property.CollectionName, property.Name, "options"))
@@ -135,68 +146,79 @@ func (property InterfaceProperty) getTypescriptType(flags propertyFlags) string 
 
 		relationTo, ok := property.Data.(string)
 		if !ok {
-			return "object"
+			return "map[string]interface{}"
 		} else {
-			return strcase.ToCamel(relationTo)
+			if property.Optional {
+				return "*" + strcase.ToCamel(relationTo)
+			} else {
+				return strcase.ToCamel(relationTo)
+			}
 		}
 	default:
-		return "string"
+		if property.Optional {
+			return "*string"
+		} else {
+			return "string"
+		}
 	}
 }
 
-func (property InterfaceProperty) getTypescriptTypeWithArray(flags propertyFlags) string {
-	tsType := property.getTypescriptType(flags)
+func (property InterfaceProperty) getGoTypeWithArray(flags propertyFlags) string {
+	tsType := property.getGoType(flags)
 
 	if property.IsArray {
+		if strings.HasPrefix(tsType, "*") {
+			tsType = tsType[1:]
+		}
 		if property.Optional {
-			return fmt.Sprintf("%s[]", tsType)
+			return fmt.Sprintf("*[]%s", tsType)
 		} else {
-			return fmt.Sprintf("[%s]", tsType)
+			return fmt.Sprintf("[]%s", tsType)
 		}
 	}
 
 	return tsType
 }
 
-func (property InterfaceProperty) getTypescriptName(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+func (property InterfaceProperty) getGoName(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
 	if property.Optional && generatorFlags.MakeNonRequiredOptional || flags.forceOptional {
-		return fmt.Sprintf("%s?", property.Name)
+		return fmt.Sprintf("%s", property.Name)
 	}
 
 	return property.Name
 }
 
-func (collection CollectionWithProperties) GetTypescriptInterface(generatorFlags *cmd.GeneratorFlags) string {
+func (collection CollectionWithProperties) GetGoInterface(generatorFlags *cmd.GeneratorFlags) string {
 	properties := make([]string, len(collection.Properties))
 	var additionalTypes []string
 	var expandedRelations []string
 
 	for i, property := range collection.Properties {
-		properties[i] = fmt.Sprintf("    %s;", property.GetTypescriptProperty(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}))
+		properties[i] = fmt.Sprintf("    %s;", property.GetGoProperty(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}))
 
 		if property.Type == IptEnum {
-			additionalTypes = append(additionalTypes, property.getTypescriptEnum())
+			additionalTypes = append(additionalTypes, property.getGoEnum())
 		}
 
 		if property.Type == IptRelation {
-			expandedRelations = append(expandedRelations, fmt.Sprintf("    %s;", property.GetTypescriptProperty(generatorFlags, propertyFlags{forceOptional: true, relationAsString: false})))
+			expandedRelations = append(expandedRelations, fmt.Sprintf("    %s;", property.GetGoProperty(generatorFlags, propertyFlags{forceOptional: true, relationAsString: false})))
 		}
 	}
 
 	if len(expandedRelations) > 0 {
-		expandedRelations = append(expandedRelations, "    [key: string]: unknown;")
+		// expandedRelations = append(expandedRelations, "    [key: string]: unknown;")
 
-		expandedType := fmt.Sprintf("export interface %sExpanded {\n%s\n}", strcase.ToCamel(collection.Collection.Name), strings.Join(expandedRelations, "\n"))
+		expandedType := fmt.Sprintf("type %sExpanded struct {\n%s\n}", strcase.ToCamel(collection.Collection.Name), strings.Join(expandedRelations, "\n"))
 
 		additionalTypes = append(additionalTypes, expandedType)
 
-		expandedLine := fmt.Sprintf("    expand?: %sExpanded;", strcase.ToCamel(collection.Collection.Name))
+		expandedLine := fmt.Sprintf("    Expand %sExpanded `json:\"expand\"`", strcase.ToCamel(collection.Collection.Name))
 
 		properties = append([]string{expandedLine}, properties...)
 	} else {
-		expandedLine := "    expand?: { [key: string]: unknown; };"
+		// expandedLine := "    expand?: { [key: string]: unknown; };"
 
-		properties = append([]string{expandedLine}, properties...)
+		// properties = append([]string{expandedLine}, properties...)
 	}
 
 	prefix := strings.Join(additionalTypes, "\n\n")
@@ -205,10 +227,10 @@ func (collection CollectionWithProperties) GetTypescriptInterface(generatorFlags
 		prefix += "\n\n"
 	}
 
-	return fmt.Sprintf("%sexport interface %s {\n%s\n}", prefix, strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"))
+	return fmt.Sprintf("%stype %s struct {\n%s\n}", prefix, strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"))
 }
 
-func (property InterfaceProperty) getTypescriptEnum() string {
+func (property InterfaceProperty) getGoEnum() string {
 	if property.Type != IptEnum {
 		return ""
 	}
@@ -219,8 +241,8 @@ func (property InterfaceProperty) getTypescriptEnum() string {
 	enumList := make([]string, len(enumData))
 
 	for i, enum := range enumData {
-		enumList[i] = fmt.Sprintf("    %s = \"%s\"", strcase.ToCamel(enum), enum)
+		enumList[i] = fmt.Sprintf("    %s %s = %s", enumName+"_"+strcase.ToCamel(enum), enumName, strconv.Itoa(i))
 	}
 
-	return fmt.Sprintf("export enum %s {\n%s\n}", enumName, strings.Join(enumList, ",\n"))
+	return fmt.Sprintf("type %s int64\nconst (\n%s\n)", enumName, strings.Join(enumList, "\n"))
 }

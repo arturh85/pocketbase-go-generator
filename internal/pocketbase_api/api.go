@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Vogeslu/pocketbase-ts-generator/internal/credentials"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
+
+	"github.com/arturh85/pocketbase-go-generator/internal/credentials"
+	"github.com/rs/zerolog/log"
 )
 
 type PocketBase struct {
