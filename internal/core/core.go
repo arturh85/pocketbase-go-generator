@@ -14,13 +14,19 @@ import (
 func ProcessCollections(selectedCollections []*pocketbase_api.Collection, allCollections []pocketbase_api.Collection, generatorFlags *cmd.GeneratorFlags) {
 	interpretedCollections := interpreter.InterpretCollections(selectedCollections, allCollections)
 
-	output := make([]string, len(interpretedCollections))
+	output := make([]string, len(interpretedCollections)+1)
 
 	for i, collection := range interpretedCollections {
 		output[i] = collection.GetGoInterface(generatorFlags)
 	}
 
-	joinedData := strings.Join(output, "\n\n")
+	collectionDefinitions := make([]string, len(interpretedCollections))
+	for i, collection := range interpretedCollections {
+		collectionDefinitions[i] = collection.GetGoCollectionEntry(generatorFlags)
+	}
+
+	output[len(interpretedCollections)] = fmt.Sprintf("const (\n%s\n)", strings.Join(collectionDefinitions, "\n"))
+	joinedData := "package collections\n\n" + strings.Join(output, "\n\n")
 
 	if generatorFlags.Output == "" {
 		fmt.Println(joinedData)

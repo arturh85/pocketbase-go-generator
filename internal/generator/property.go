@@ -2,7 +2,6 @@ package generator
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/arturh85/pocketbase-go-generator/internal/cmd"
@@ -188,12 +187,21 @@ func (property InterfaceProperty) getGoName(generatorFlags *cmd.GeneratorFlags, 
 	return property.Name
 }
 
+func (collection CollectionWithProperties) GetGoCollectionEntry(generatorFlags *cmd.GeneratorFlags) string {
+	return fmt.Sprintf("    Collection%s = \"%s\"", strcase.ToCamel(collection.Collection.Name), collection.Collection.Name)
+}
+
 func (collection CollectionWithProperties) GetGoInterface(generatorFlags *cmd.GeneratorFlags) string {
 	properties := make([]string, len(collection.Properties))
 	var additionalTypes []string
 	var expandedRelations []string
 
+	fieldNames := make([]string, len(collection.Properties))
+	fieldNameValues := make([]string, len(collection.Properties))
+
 	for i, property := range collection.Properties {
+		fieldNames[i] = strcase.ToCamel(property.Name)
+		fieldNameValues[i] = fmt.Sprintf("%s: \"%s\"", fieldNames[i], property.Name)
 		properties[i] = fmt.Sprintf("    %s;", property.GetGoProperty(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}))
 
 		if property.Type == IptEnum {
@@ -227,7 +235,8 @@ func (collection CollectionWithProperties) GetGoInterface(generatorFlags *cmd.Ge
 		prefix += "\n\n"
 	}
 
-	return fmt.Sprintf("%stype %s struct {\n%s\n}", prefix, strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"))
+	var fieldsInfo = fmt.Sprintf("var %sFields = struct {\n    %s string\n}{\n%s,\n}", strcase.ToCamel(collection.Collection.Name), strings.Join(fieldNames, ", "), strings.Join(fieldNameValues, ",\n"))
+	return fmt.Sprintf("%stype %s struct {\n%s\n}\n\n%s", prefix, strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"), fieldsInfo)
 }
 
 func (property InterfaceProperty) getGoEnum() string {
@@ -241,8 +250,8 @@ func (property InterfaceProperty) getGoEnum() string {
 	enumList := make([]string, len(enumData))
 
 	for i, enum := range enumData {
-		enumList[i] = fmt.Sprintf("    %s %s = %s", enumName+"_"+strcase.ToCamel(enum), enumName, strconv.Itoa(i))
+		enumList[i] = fmt.Sprintf("    %s %s = \"%s\"", enumName+"_"+strcase.ToCamel(enum), enumName, enum)
 	}
 
-	return fmt.Sprintf("type %s int64\nconst (\n%s\n)", enumName, strings.Join(enumList, "\n"))
+	return fmt.Sprintf("type %s string\nconst (\n%s\n)", enumName, strings.Join(enumList, "\n"))
 }
