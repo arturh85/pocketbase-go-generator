@@ -19,6 +19,7 @@ const (
 	IptFile
 	IptEnum
 	IptRelation
+	IptDate
 )
 
 type InterfaceProperty struct {
@@ -54,6 +55,10 @@ func GetInterfacePropertyType(typeName string) InterfacePropertyType {
 		return IptFile
 	case "relation":
 		return IptRelation
+	case "date":
+		return IptDate
+	case "autodate":
+		return IptDate
 	default:
 		return IptString
 	}
@@ -116,6 +121,56 @@ func (property InterfaceProperty) GetGoProperty(generatorFlags *cmd.GeneratorFla
 	return fmt.Sprintf("%s %s `json:\"%s\"`", strcase.ToCamel(property.getGoName(generatorFlags, flags)), property.getGoTypeWithArray(flags), property.getGoName(generatorFlags, flags))
 }
 
+/*
+example getter:
+
+	func (a *Article) Title() string {
+	    return a.GetString("title")
+	}
+*/
+func (property InterfaceProperty) GetGoRecordGetter(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+	return fmt.Sprintf("func (a *%sRecord) %s() %s {\n    return a.%s(\"%s\")\n}\n",
+		strcase.ToCamel(property.CollectionName),
+		strcase.ToCamel(property.Name),
+		property.getGoRecordType(flags),
+		property.getPocketbaseGetter(flags),
+		property.getGoName(generatorFlags, flags),
+	)
+}
+
+var reserved = []string{"type", "var", "func", "map", "struct"}
+
+/*
+example setter:
+
+	func (a *Article) SetTitle(title string) {
+	    a.Set("title", title)
+	}
+*/
+
+func (property InterfaceProperty) GetGoRecordSetter(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+	var validGoName = strcase.ToLowerCamel(property.getGoName(generatorFlags, flags))
+	for _, word := range reserved {
+		if validGoName == word {
+			validGoName = "_" + validGoName
+			break
+		}
+	}
+
+	if property.Name == "created" || property.Name == "updated" {
+		return ""
+	}
+
+	return fmt.Sprintf("func (a *%sRecord) Set%s(%s %s) {\n    a.Set(\"%s\", %s)\n}\n",
+		strcase.ToCamel(property.CollectionName),
+		strcase.ToCamel(property.Name),
+		validGoName,
+		property.getGoRecordType(flags),
+		property.getGoName(generatorFlags, flags),
+		validGoName,
+	)
+}
+
 func (property InterfaceProperty) getGoType(flags propertyFlags) string {
 	switch property.Type {
 	case IptNumber:
@@ -148,9 +203,9 @@ func (property InterfaceProperty) getGoType(flags propertyFlags) string {
 			return "map[string]interface{}"
 		} else {
 			if property.Optional {
-				return "*" + strcase.ToCamel(relationTo)
+				return "*" + strcase.ToCamel(relationTo) + "Struct"
 			} else {
-				return strcase.ToCamel(relationTo)
+				return strcase.ToCamel(relationTo) + "Struct"
 			}
 		}
 	default:
@@ -159,6 +214,42 @@ func (property InterfaceProperty) getGoType(flags propertyFlags) string {
 		} else {
 			return "string"
 		}
+	}
+}
+func (property InterfaceProperty) getPocketbaseGetter(flags propertyFlags) string {
+	switch property.Type {
+	case IptNumber:
+		return "GetFloat"
+	case IptBoolean:
+		return "GetBool"
+	case IptJson:
+		return "Get"
+	case IptEnum:
+		return "GetString"
+	case IptRelation:
+		return "GetString"
+	case IptDate:
+		return "GetDateTime"
+	default:
+		return "GetString"
+	}
+}
+func (property InterfaceProperty) getGoRecordType(flags propertyFlags) string {
+	switch property.Type {
+	case IptNumber:
+		return "float64"
+	case IptBoolean:
+		return "bool"
+	case IptJson:
+		return "any"
+	case IptEnum:
+		return "string"
+	case IptRelation:
+		return "string"
+	case IptDate:
+		return "types.DateTime"
+	default:
+		return "string"
 	}
 }
 
@@ -191,7 +282,31 @@ func (collection CollectionWithProperties) GetGoCollectionEntry(generatorFlags *
 	return fmt.Sprintf("    Collection%s = \"%s\"", strcase.ToCamel(collection.Collection.Name), collection.Collection.Name)
 }
 
-func (collection CollectionWithProperties) GetGoInterface(generatorFlags *cmd.GeneratorFlags) string {
+func (collection CollectionWithProperties) GetGoRecord(generatorFlags *cmd.GeneratorFlags) string {
+	properties := make([]string, len(collection.Properties))
+	var additionalTypes []string
+
+	// fieldNames := make([]string, len(collection.Properties))
+	// fieldNameValues := make([]string, len(collection.Properties))
+
+	for i, property := range collection.Properties {
+		// fieldNames[i] = strcase.ToCamel(property.Name)
+		// fieldNameValues[i] = fmt.Sprintf("%s: \"%s\"", fieldNames[i], property.Name)
+		properties[i] = fmt.Sprintf("%s\n\n%s",
+			property.GetGoRecordGetter(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}),
+			property.GetGoRecordSetter(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}))
+	}
+
+	prefix := strings.Join(additionalTypes, "\n\n")
+
+	if prefix != "" {
+		prefix += "\n\n"
+	}
+
+	return fmt.Sprintf("%s\nvar _ core.RecordProxy = (*%sRecord)(nil)\n\ntype %sRecord struct {\n    core.BaseRecordProxy\n}\n\n%s\n\n", prefix, strcase.ToCamel(collection.Collection.Name), strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"))
+}
+
+func (collection CollectionWithProperties) GetGoStruct(generatorFlags *cmd.GeneratorFlags) string {
 	properties := make([]string, len(collection.Properties))
 	var additionalTypes []string
 	var expandedRelations []string
@@ -236,7 +351,7 @@ func (collection CollectionWithProperties) GetGoInterface(generatorFlags *cmd.Ge
 	}
 
 	var fieldsInfo = fmt.Sprintf("var %sFields = struct {\n    %s string\n}{\n%s,\n}", strcase.ToCamel(collection.Collection.Name), strings.Join(fieldNames, ", "), strings.Join(fieldNameValues, ",\n"))
-	return fmt.Sprintf("%stype %s struct {\n%s\n}\n\n%s", prefix, strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"), fieldsInfo)
+	return fmt.Sprintf("%stype %sStruct struct {\n%s\n}\n\n%s", prefix, strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"), fieldsInfo)
 }
 
 func (property InterfaceProperty) getGoEnum() string {

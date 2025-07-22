@@ -17,7 +17,7 @@ func ProcessCollections(selectedCollections []*pocketbase_api.Collection, allCol
 	output := make([]string, len(interpretedCollections)+1)
 
 	for i, collection := range interpretedCollections {
-		output[i] = collection.GetGoInterface(generatorFlags)
+		output[i] = collection.GetGoStruct(generatorFlags) + "\n" + collection.GetGoRecord(generatorFlags)
 	}
 
 	collectionDefinitions := make([]string, len(interpretedCollections))
@@ -26,7 +26,15 @@ func ProcessCollections(selectedCollections []*pocketbase_api.Collection, allCol
 	}
 
 	output[len(interpretedCollections)] = fmt.Sprintf("const (\n%s\n)", strings.Join(collectionDefinitions, "\n"))
-	joinedData := "package collections\n\n" + strings.Join(output, "\n\n")
+
+	imports := `
+import (
+    "github.com/pocketbase/pocketbase/core"
+    "github.com/pocketbase/pocketbase/tools/types"
+)
+`
+
+	joinedData := "package collections\n\n" + imports + "\n" + strings.Join(output, "\n\n")
 
 	if generatorFlags.Output == "" {
 		fmt.Println(joinedData)

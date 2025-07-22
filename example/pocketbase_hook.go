@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/arturh85/pocketbase-go-generator/pkg/pocketbase-go-generator"
+	pocketbase_go_generator "github.com/arturh85/pocketbase-go-generator/pkg/pocketbase-go-generator"
 	"github.com/pocketbase/pocketbase"
 	"github.com/rs/zerolog/log"
 )
