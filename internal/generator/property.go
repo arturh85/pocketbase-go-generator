@@ -394,12 +394,12 @@ func (collection CollectionWithProperties) GetGoRecord(generatorFlags *cmd.Gener
 	}
 
 	var publicExportStruct = `
-	func (a *$$$Record) PublicExportStruct() $$$Struct {
-		bytes, _ := json.Marshal(a.PublicExport())
-		var record = $$$Struct{}
-		_ = json.Unmarshal(bytes, &record)
-		return record
-	}
+func (a *$$$Record) PublicExportStruct() $$$Struct {
+	bytes, _ := json.Marshal(a.PublicExport())
+	var record = $$$Struct{}
+	_ = json.Unmarshal(bytes, &record)
+	return record
+}
 	`
 
 	return fmt.Sprintf("%s\nvar _ core.RecordProxy = (*%sRecord)(nil)\n\ntype %sRecord struct {\n    core.BaseRecordProxy\n}\n\n%s\n\n%s\n\n",

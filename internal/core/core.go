@@ -29,8 +29,10 @@ func ProcessCollections(selectedCollections []*pocketbase_api.Collection, allCol
 
 	imports := `
 import (
-    "github.com/pocketbase/pocketbase/core"
-    "github.com/pocketbase/pocketbase/tools/types"
+	"encoding/json"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 `
 
