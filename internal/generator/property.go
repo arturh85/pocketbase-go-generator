@@ -129,12 +129,55 @@ example getter:
 	}
 */
 func (property InterfaceProperty) GetGoRecordGetter(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
-	return fmt.Sprintf("func (a *%sRecord) %s() %s {\n    return a.%s(\"%s\")\n}\n",
+	intGetter := ""
+
+	if property.Type == IptNumber {
+		intGetter = fmt.Sprintf("func (a *%sRecord) %s() %s {\n    return a.%s(\"%s\")\n}\n\n",
+			strcase.ToCamel(property.CollectionName),
+			strcase.ToCamel(property.Name)+"Int",
+			"int",
+			"GetInt",
+			property.getGoName(generatorFlags, flags),
+		)
+	}
+
+	return fmt.Sprintf("%sfunc (a *%sRecord) %s() %s {\n    return a.%s(\"%s\")\n}\n",
+		intGetter,
 		strcase.ToCamel(property.CollectionName),
 		strcase.ToCamel(property.Name),
 		property.getGoRecordType(flags),
 		property.getPocketbaseGetter(flags),
 		property.getGoName(generatorFlags, flags),
+	)
+}
+func (property InterfaceProperty) GetGoRecordExpandRelation(generatorFlags *cmd.GeneratorFlags, flags propertyFlags) string {
+
+	// if errs := app.ExpandRecord(wjob.Record, []string{collections.WorkerJobsFields.Job}, nil); len(errs) > 0 {
+	// 	logrus.Error(fmt.Sprintf("Failed to expand job for worker job %s: %v", wjob.Id(), errs))
+	// 	sentry.CaptureException(err)
+	// 	continue
+	// }
+	// job := collections.Jobs_Wrap(wjob.ExpandedOne(collections.WorkerJobsFields.Job))
+
+	relationName := property.Data.(string)
+	return fmt.Sprintf(`		
+		func (a *%sRecord) Expand%s(app core.App) (%s, error) {
+			if errs := app.ExpandRecord(a.Record, []string{"%s"}, nil); len(errs) > 0 {
+				return nil, errs["%s"]
+			}
+			record := a.ExpandedOne("%s")
+			if record == nil { return nil, nil }
+			return %s_Wrap(record), nil
+		}
+		`,
+		strcase.ToCamel(property.CollectionName),
+		strcase.ToCamel(property.Name),
+		"*"+strcase.ToCamel(relationName)+"Record",
+
+		property.getGoName(generatorFlags, flags),
+		property.getGoName(generatorFlags, flags),
+		property.getGoName(generatorFlags, flags),
+		strcase.ToCamel(relationName),
 	)
 }
 
@@ -217,6 +260,9 @@ func (property InterfaceProperty) getGoType(flags propertyFlags) string {
 	}
 }
 func (property InterfaceProperty) getPocketbaseGetter(flags propertyFlags) string {
+	if property.IsArray {
+		return "GetStringSlice"
+	}
 	switch property.Type {
 	case IptNumber:
 		return "GetFloat"
@@ -235,6 +281,9 @@ func (property InterfaceProperty) getPocketbaseGetter(flags propertyFlags) strin
 	}
 }
 func (property InterfaceProperty) getGoRecordType(flags propertyFlags) string {
+	if property.IsArray {
+		return "[]string"
+	}
 	switch property.Type {
 	case IptNumber:
 		return "float64"
@@ -282,19 +331,60 @@ func (collection CollectionWithProperties) GetGoCollectionEntry(generatorFlags *
 	return fmt.Sprintf("    Collection%s = \"%s\"", strcase.ToCamel(collection.Collection.Name), collection.Collection.Name)
 }
 
+func (collection CollectionWithProperties) GetGoCollectionHelperFuncs(generatorFlags *cmd.GeneratorFlags) string {
+	template := `
+func $$$_Wrap(record *core.Record) *$$$Record {
+	typedRecord := &$$$Record{}
+	typedRecord.SetProxyRecord(record)
+	return typedRecord
+}
+
+func $$$_New(app core.App) (*$$$Record, error) {
+	c, err := app.FindCollectionByNameOrId(Collection$$$)
+	if err != nil { return nil, err }
+	return $$$_Wrap(core.NewRecord(c)), nil
+}
+
+func $$$_FindRecordById(app core.App, recordId string, optFilters ...func(q *dbx.SelectQuery) error) (*$$$Record, error) {
+	_record, err := app.FindRecordById(Collection$$$, recordId, optFilters...)
+	if err != nil { return nil, err }
+	return $$$_Wrap(_record), nil
+}
+
+func $$$_FindFirstRecordByData(app core.App, key string, value any) (*$$$Record, error) {
+	_record, err := app.FindFirstRecordByData(Collection$$$, key, value)
+	if err != nil { return nil, err }
+	return $$$_Wrap(_record), nil
+}
+
+func $$$_FindRecordsByFilter(app core.App,
+	filter string,
+	sort string,
+	limit int,
+	offset int,
+	params ...dbx.Params) ([]*$$$Record, error) {
+	_records, err := app.FindRecordsByFilter(Collection$$$, filter, sort, limit, offset, params...)
+	if err != nil { return nil, err }
+	records := make([]*$$$Record, len(_records))
+	for i, _record := range _records { records[i] = $$$_Wrap(_record) }
+	return records, err
+}
+	`
+	return strings.ReplaceAll(template, "$$$", strcase.ToCamel(collection.Collection.Name))
+}
+
 func (collection CollectionWithProperties) GetGoRecord(generatorFlags *cmd.GeneratorFlags) string {
 	properties := make([]string, len(collection.Properties))
 	var additionalTypes []string
 
-	// fieldNames := make([]string, len(collection.Properties))
-	// fieldNameValues := make([]string, len(collection.Properties))
-
 	for i, property := range collection.Properties {
-		// fieldNames[i] = strcase.ToCamel(property.Name)
-		// fieldNameValues[i] = fmt.Sprintf("%s: \"%s\"", fieldNames[i], property.Name)
 		properties[i] = fmt.Sprintf("%s\n\n%s",
 			property.GetGoRecordGetter(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}),
 			property.GetGoRecordSetter(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true}))
+
+		if property.Type == IptRelation {
+			properties[i] += property.GetGoRecordExpandRelation(generatorFlags, propertyFlags{forceOptional: false, relationAsString: true})
+		}
 	}
 
 	prefix := strings.Join(additionalTypes, "\n\n")
@@ -303,7 +393,22 @@ func (collection CollectionWithProperties) GetGoRecord(generatorFlags *cmd.Gener
 		prefix += "\n\n"
 	}
 
-	return fmt.Sprintf("%s\nvar _ core.RecordProxy = (*%sRecord)(nil)\n\ntype %sRecord struct {\n    core.BaseRecordProxy\n}\n\n%s\n\n", prefix, strcase.ToCamel(collection.Collection.Name), strcase.ToCamel(collection.Collection.Name), strings.Join(properties, "\n"))
+	var publicExportStruct = `
+	func (a *$$$Record) PublicExportStruct() $$$Struct {
+		bytes, _ := json.Marshal(a.PublicExport())
+		var record = $$$Struct{}
+		_ = json.Unmarshal(bytes, &record)
+		return record
+	}
+	`
+
+	return fmt.Sprintf("%s\nvar _ core.RecordProxy = (*%sRecord)(nil)\n\ntype %sRecord struct {\n    core.BaseRecordProxy\n}\n\n%s\n\n%s\n\n",
+		prefix,
+		strcase.ToCamel(collection.Collection.Name),
+		strcase.ToCamel(collection.Collection.Name),
+		strings.Join(properties, "\n"),
+		strings.ReplaceAll(publicExportStruct, "$$$", strcase.ToCamel(collection.Collection.Name)),
+	)
 }
 
 func (collection CollectionWithProperties) GetGoStruct(generatorFlags *cmd.GeneratorFlags) string {

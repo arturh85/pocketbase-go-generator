@@ -36,6 +36,12 @@ import (
 
 	joinedData := "package collections\n\n" + imports + "\n" + strings.Join(output, "\n\n")
 
+	helper_funcs := make([]string, len(interpretedCollections))
+	for i, collection := range interpretedCollections {
+		helper_funcs[i] = collection.GetGoCollectionHelperFuncs(generatorFlags)
+	}
+	joinedData += strings.Join(helper_funcs, "\n\n")
+
 	if generatorFlags.Output == "" {
 		fmt.Println(joinedData)
 	} else {
